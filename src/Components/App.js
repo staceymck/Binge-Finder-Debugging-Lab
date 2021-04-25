@@ -14,15 +14,87 @@ class App extends Component {
     selectedShow: "",
     episodes: [],
     filterByRating: "",
+    page: 0,
+    scrolling: false
   }
 
   componentDidMount = () => {
-    Adapter.getShows().then(shows => this.setState({shows}), () => console.log(this.state.shows))
+    window.addEventListener('scroll', () => {this.setState({scrolling: true})})
+    Adapter.getShows(this.state.page).then(shows => this.setState({shows}))
+
+    this.timerId = setInterval(() => {
+      if (this.state.scrolling) {
+          this.setState({scrolling: false})
+          this.infiniteScroll()
+      }
+    }, 500)
   }
 
-  componentDidUpdate = () => {
+  scrollToTop = () => {
     window.scrollTo(0, 0)
   }
+
+  componentWillUnmount = () => {
+    clearInterval(this.timerId)
+  }
+
+  infiniteScroll = () => {
+    let scrollHeight = Math.max(
+      document.body.scrollHeight, document.documentElement.scrollHeight,
+      document.body.offsetHeight, document.documentElement.offsetHeight,
+      document.body.clientHeight, document.documentElement.clientHeight
+    )
+
+    if (document.documentElement.clientHeight + window.scrollY > scrollHeight - 300 && this.state.page < 220) {
+      
+      this.setState(state => {
+        return {
+          page: state.page + 1
+        }
+      })
+      
+      Adapter.getShows(this.state.page)
+      .then(newShows => {
+        console.log(newShows)
+          this.setState(state => {
+            return {
+              shows: state.shows.concat(newShows)
+            }
+          })
+      })
+      .catch(error => console.log("issue"))
+      
+    }
+  }
+
+  // infiniteScroll = (e) => {
+  //   if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
+  //   //if (window.innerHeight + document.documentElement.scrollTop === document.documentElement.offsetHeight){
+  //     // const lastLi = document.querySelector(".TVShowGrid > div:last-child");
+  //     // const lastLiOffset = lastLi.offsetTop + lastLi.clientHeight;
+  //     // const pageOffset = window.pageYOffset + window.innerHeight;
+  //     // if (pageOffset > lastLiOffset) {
+  //       console.log("bottom")
+  //       this.setState(state => {
+  //         return {
+  //           page: state.page + 1
+  //         }
+  //       }, () => console.log(this.state.page))
+  //       Adapter.getShows(this.state.page)
+  //       .then(newShows => {
+  //         if(newShows) {
+  //           this.setState(state => {
+  //           return {
+  //             shows: [...state.shows, newShows],
+  //             loading: false
+  //           }
+  //           }, () => console.log(this.state.shows))
+  //         } else {
+  //           this.setState({loading: false, endOfShows: true})
+  //         }
+  //       })
+  //     }
+  // }
 
   handleSearch = (e) => {
     this.setState({ searchTerm: e.target.value.toLowerCase() })
@@ -38,6 +110,7 @@ class App extends Component {
       selectedShow: show,
       episodes
     }))
+    this.scrollToTop()
   }
 
   displayShows = () => {
@@ -54,12 +127,12 @@ class App extends Component {
     return (
       <div>
         <Nav handleFilter={this.handleFilter} handleSearch={this.handleSearch} searchTerm={this.state.searchTerm}/>
-        <Grid celled>
+        <Grid celled >
           <Grid.Column width={5}>
             {!!this.state.selectedShow ? <SelectedShowContainer selectedShow={this.state.selectedShow} episodes={this.state.episodes}/> : <div/>}
           </Grid.Column>
-          <Grid.Column width={11}>
-            <TVShowList shows={this.displayShows()} selectShow={this.selectShow} searchTerm={this.state.searchTerm}/>
+          <Grid.Column width={11} >
+            <TVShowList shows={this.displayShows()} selectShow={this.selectShow} searchTerm={this.state.searchTerm} />
           </Grid.Column>
         </Grid>
       </div>

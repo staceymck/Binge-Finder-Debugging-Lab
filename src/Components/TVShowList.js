@@ -16,10 +16,9 @@ class TVShowList extends Component {
   }
 
   render() {
-    console.log(this.props.shows)
     return (
       <div className="TVShowList">
-        <Grid>
+        <Grid className="TVShowGrid">
           {this.mapAllShows()}
         </Grid>
       </div>

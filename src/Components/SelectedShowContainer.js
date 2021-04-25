@@ -53,6 +53,13 @@ class SelectedShowContainer extends Component {
 
 export default SelectedShowContainer;
 
+SelectedShowContainer.defaultProps = {
+  selectedShow: {
+    rating: {average: "No rating data available"}
+  }
+  
+}
+
 
 Array.prototype.unique = function() {
   var arr = [];
